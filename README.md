@@ -1,16 +1,12 @@
 # movie_explorer
 
-A new Flutter project.
+1. Лустов Богдан, Студеникин Петр 9-4-ПО-22
+2. Мобильное приложение MovieFinder предназначено для поиска и просмотра информации о фильмах. Приложение позволяет пользователям быстро находить фильмы по названию и получать основные сведения, такие как год выпуска, описание, жанр и рейтинг, используя HTTP-запросы к внешнему API.
 
-## Getting Started
+Основная проблема, которую решает приложение, - отсутствие удобного и простого способа быстро получить информацию о фильме без необходимости посещать несколько сайтов или сервисов. MovieFinder объединяет данные в одном интерфейсе и делает процесс поиска более наглядным и доступным.
 
-This project is a starting point for a Flutter application.
+Приложение ориентировано на широкую аудиторию: любителей кино, студентов, пользователей, которые ищут информацию о фильмах перед просмотром.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. Ссылка figma: https://www.figma.com/design/K51hP1rqX8fGxNdIdRpAqx/Untitled?m=auto&t=M82gBfgSXEg4lIhR-6
+Первый экран: Home
+Второй экран: Notes
