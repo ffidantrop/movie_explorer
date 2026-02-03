@@ -1,21 +1,29 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:movie_explorer/screens/notes.dart';
 import 'package:http/http.dart' as http;
 import 'package:movie_explorer/classes/movie.dart';
-import 'package:movie_explorer/constaints.dart';
+import 'package:movie_explorer/screens/details_screen.dart';
+import 'package:movie_explorer/screens/notes.dart';
 
-Future<Movie> fetchMovie(String title) async {
+const String API_KEY = 'CSNGKJF-8VXM6DR-H4NQRAH-0XWVZPK';
+
+Future<List<Movie>> fetchMovies(String query) async {
   final response = await http.get(
-    Uri.parse('https://www.omdbapi.com/?t=$title&apikey=5bee7d98'),
+    Uri.parse(
+      'https://api.poiskkino.dev/v1.4/movie/search?page=1&limit=20&query=$query',
+    ),
+    headers: {
+      'X-API-KEY': API_KEY,
+    },
   );
 
   final data = jsonDecode(response.body);
 
-  if (response.statusCode == 200 && data['Response'] == 'True') {
-    return Movie.fromJson(data);
+  if (response.statusCode == 200) {
+    final List list = data['docs'];
+    return list.map((e) => Movie.fromJson(e)).toList();
   } else {
-    throw Exception(data['Error'] ?? 'Фильм не найден');
+    throw Exception('Ошибка загрузки');
   }
 }
 
@@ -27,13 +35,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<Movie> futureMovie;
+  late Future<List<Movie>> futureMovies;
   final TextEditingController _controller = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    futureMovie = fetchMovie('Drive');
+    futureMovies = fetchMovies('Drive');
   }
 
   @override
@@ -51,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: _controller,
           onSubmitted: (value) {
             setState(() {
-              futureMovie = fetchMovie(value);
+              futureMovies = fetchMovies(value);
             });
           },
           decoration: InputDecoration(
@@ -78,116 +86,65 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
-      body: Center(
-        child: FutureBuilder<Movie>(
-          future: futureMovie,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator(
+      body: FutureBuilder<List<Movie>>(
+        future: futureMovies,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
                 color: Color.fromARGB(255, 235, 220, 178),
-              );
-            }
-            if (snapshot.hasError) {
-              return Text(
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
                 snapshot.error.toString(),
                 style: const TextStyle(color: Colors.red),
-              );
-            }
-            if (!snapshot.hasData) {
-              return const Text('Нет данных');
-            }
-            final movie = snapshot.data!;
-
-            return ListView(
-              padding: const EdgeInsets.all(24),
-              children: [
-                if (movie.poster != 'N/A')
-                  Image.network(movie.poster, height: 400),
-
-                const SizedBox(height: 16),
-                OverflowBar(
-                  alignment: MainAxisAlignment.spaceEvenly,
-                  children: <Widget>[
-                    OutlinedButton(
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty<Color>.fromMap(
-                          <WidgetStatesConstraint, Color>{
-                            WidgetState.focused: Color.fromARGB(255, 238, 207, 124),
-                            WidgetState.pressed | WidgetState.hovered:
-                                Color.fromARGB(255, 238, 207, 124),
-                            WidgetState.any: Color.fromARGB(255, 235, 220, 178),
-                          },
-                        ),
-                      ),
-                      child: Icon(Icons.remove_red_eye, color: Color.fromARGB(255, 102, 46, 28)),
-                      onPressed: () {},
-                    ),
-                    OutlinedButton(
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty<Color>.fromMap(
-                          <WidgetStatesConstraint, Color>{
-                            WidgetState.focused: Color.fromARGB(255, 238, 207, 124),
-                            WidgetState.pressed | WidgetState.hovered:
-                                Color.fromARGB(255, 238, 207, 124),
-                            WidgetState.any: Color.fromARGB(255, 235, 220, 178),
-                          },
-                        ),
-                      ),
-                      child: Icon(Icons.list_alt_rounded, color: Color.fromARGB(255, 102, 46, 28)),
-                      onPressed: () {},
-                    ),
-                    OutlinedButton(
-                      style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty<Color>.fromMap(
-                          <WidgetStatesConstraint, Color>{
-                            WidgetState.focused: Color.fromARGB(255, 238, 207, 124),
-                            WidgetState.pressed | WidgetState.hovered:
-                                Color.fromARGB(255, 238, 207, 124),
-                            WidgetState.any: Color.fromARGB(255, 235, 220, 178),
-                          },
-                        ),
-                      ),
-                      child: Icon(Icons.favorite,  color: Color.fromARGB(255, 102, 46, 28)),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        'Название фильма: ${movie.title}',
-                        style: myListViewTextStyle,
-                      ),
-                      Text('Год: ${movie.year}', style: myListViewTextStyle),
-                      Text(
-                        'Актеры: ${movie.actors}',
-                        style: myListViewTextStyle,
-                      ),
-                      Text(
-                        'Рейтинг: IMDB ${movie.imdbrating}',
-                        style: myListViewTextStyle,
-                      ),
-                      Text(
-                        'Рейтинг: Metascore ${movie.metascore}',
-                        style: myListViewTextStyle,
-                      ),
-                      Text('Жанр: ${movie.genre}', style: myListViewTextStyle),
-                      Text(
-                        'Длительность: ${movie.runtime}',
-                        style: myListViewTextStyle,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             );
-          },
-        ),
+          }
+
+          final movies = snapshot.data!;
+          if (movies.isEmpty) {
+            return const Center(child: Text('Ничего не найдено'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: movies.length,
+            itemBuilder: (context, index) {
+              final movie = movies[index];
+
+              return Card(
+                color: const Color.fromARGB(255, 235, 220, 178),
+                margin: const EdgeInsets.only(bottom: 16),
+                child: ListTile(
+                  leading: movie.poster != null
+                      ? Image.network(movie.poster!, width: 50, fit: BoxFit.cover)
+                      : const Icon(Icons.movie),
+                  title: Text(movie.title),
+                  subtitle: Text(
+                    '${movie.year ?? '—'} | ⭐ ${movie.rating ?? '—'}',
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MovieDetailsScreen(movie: movie),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
 }
+
+
+
